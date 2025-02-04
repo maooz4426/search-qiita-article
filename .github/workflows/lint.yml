@@ -21,7 +21,7 @@ jobs:
       - name: run install
         run: npm install
       - name: format
-        run: npm fix-lint
+        run: npm run fix-lint
       - name: pr-formatter
         uses: dev-hato/actions-diff-pr-management@v1
         with:
