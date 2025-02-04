@@ -22,7 +22,7 @@ jobs:
       - name: run install
         run: yarn install --frozen-lockfile
       - name: format
-        run: yarn run fix-lint
+        run: yarn ray lint --fix
       - name: pr-formatter
         uses: dev-hato/actions-diff-pr-management@v1
         with:
