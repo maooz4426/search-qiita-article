@@ -1,0 +1,30 @@
+name: lint
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+    branches:
+      - develop
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "yarn"
+      - name: format
+        uses: yarn run fix-lint
+      - name: pr-formatter
+        uses: dev-hato/actions-diff-pr-management@v1
+        with:
+            github-token: ${{ secrets.GITHUB_TOKEN }}
+            branch-name-prefix: fix-lint
+
+
