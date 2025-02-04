@@ -19,9 +19,9 @@ jobs:
         with:
           node-version: '20.x'
       - name: run install
-        run: yarn install
+        run: npm install
       - name: format
-        run: yarn fix-lint
+        run: npm fix-lint
       - name: pr-formatter
         uses: dev-hato/actions-diff-pr-management@v1
         with:
