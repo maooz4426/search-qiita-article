@@ -54,7 +54,6 @@ export default function Command() {
 
     try {
       const res = await apiClient.get(query);
-
       res.data.forEach((item: QiitaItemRes) => {
         if (item.url) {
           urls.push(item.url);
@@ -72,6 +71,7 @@ export default function Command() {
     }
   };
 
+  //非同期のタイミングでレンダリングがうまくいってない
   useEffect(() => {
     const fetch = async () => {
       try {
@@ -84,7 +84,6 @@ export default function Command() {
       } catch (e) {
         console.log(e);
       } finally {
-        // console.log(formItem.accessToken);
         setIsLoading(false);
       }
     };
