@@ -20,7 +20,7 @@ jobs:
           node-version: 20
           cache: "yarn"
       - name: format
-        uses: yarn run fix-lint
+        run: yarn run fix-lint
       - name: pr-formatter
         uses: dev-hato/actions-diff-pr-management@v1
         with:
