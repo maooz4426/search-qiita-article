@@ -20,7 +20,7 @@ jobs:
           node-version: '20.x'
           cache: "yarn"
       - name: run install
-        run: npm
+        run: npm install
       - name: format
         run: npm run fix-lint
       - name: pr-formatter
