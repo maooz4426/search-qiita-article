@@ -21,7 +21,7 @@ jobs:
       - name: run install
         run: yarn install
       - name: format
-        run: yarn run fix-lint
+        run: ray lint --fix
       - name: pr-formatter
         uses: dev-hato/actions-diff-pr-management@v1
         with:
