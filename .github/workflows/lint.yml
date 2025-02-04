@@ -19,6 +19,10 @@ jobs:
         with:
           node-version: 20
           cache: "yarn"
+      - name: run install
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: install
       - name: format
         run: yarn run fix-lint
       - name: pr-formatter
