@@ -14,6 +14,13 @@ type QiitaItemRes = {
   url: string;
 };
 
+//このプロパティ変更しただけだと再レンダリングされない(配列も同様)
+type FormItem = {
+  accessToken: string;
+  user: string;
+  tag: string;
+};
+
 const saveAccessToken = async (accessToken: string) => {
   await LocalStorage.setItem("access-token", accessToken);
 };
@@ -25,26 +32,20 @@ const getAccessToken = async () => {
 };
 
 export default function Command() {
-  const [showAccessToken, setShowAccessToken] = useState<string>("");
-  const [userId, setUserId] = useState<string>("");
-  const [tag, setTag] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-
-  // const firstSet = async () => {
-  //   setLoading(true);
-  //   const accessToken = await getAccessToken();
-  //   setShowAccessToken(accessToken || "");
-  // };
-  // firstSet();
+  const [formItem, setFormItem] = useState<FormItem>({
+    accessToken: "",
+    user: "",
+    tag: "",
+  });
+  const [isLoading, setIsLoading] = useState(true);
 
   const searchArticle = async (props: Props) => {
-    setLoading(true);
-    setShowAccessToken(props.accessToken);
+    // setShowAccessToken(props.accessToken);
     saveAccessToken(props.accessToken);
     const apiClient = axios.create({
       baseURL: "https://qiita.com/api/v2/items",
       headers: {
-        Authorization: `Bearer ${showAccessToken}`,
+        Authorization: `Bearer ${formItem.accessToken}`,
       },
     });
     const query = `?query=user:${props.user}+tag:${props.tag}`;
@@ -69,23 +70,39 @@ export default function Command() {
         title: "Success Copied!",
       });
     }
-    setLoading(false);
   };
 
   useEffect(() => {
-    setLoading(true);
     const fetch = async () => {
       try {
+        setIsLoading(true);
         const act = await getAccessToken();
-        setShowAccessToken(act || "");
+        setFormItem((prev) => ({
+          ...prev,
+          accessToken: act || "",
+        }));
       } catch (e) {
         console.log(e);
+      } finally {
+        // console.log(formItem.accessToken);
+        setIsLoading(false);
       }
     };
     fetch();
-    setLoading(false);
   }, []);
 
+  // useEffect(() => {
+  //   setIsLoading(false);
+  // }, [isLoading]);
+
+  //localstorageからfetchした値が反映されないのでこれで対応
+  if (isLoading) {
+    return (
+      <Form isLoading={isLoading}>
+        <Form.Description text="Loading..." />
+      </Form>
+    );
+  }
   return (
     <Form
       actions={
@@ -93,19 +110,34 @@ export default function Command() {
           <Action.SubmitForm onSubmit={searchArticle} />
         </ActionPanel>
       }
-      isLoading={loading}
+      isLoading={isLoading}
     >
+      {isLoading && <Form.Description text="Loading..." />}
       <Form.Description text="This form showcases all available form elements." />
       <Form.TextField
         id="accessToken"
         title="Access Token"
         placeholder="Enter Access Token"
-        value={showAccessToken || ""}
-        onChange={(value) => setShowAccessToken((prev) => Object.assign({}, prev, { value }))} //スプレッド構文でエラーを吐いたため
+        value={formItem.accessToken || ""}
+        onChange={(value) => {
+          setFormItem((prev) => ({ ...prev, accessToken: value }));
+          console.log(formItem);
+        }}
       />
-      <Form.TextField id="user" title="User ID" placeholder="Enter User ID" value={userId || ""} onChange={setUserId} />
-      <Form.TextField id="tag" title="Tag" placeholder="Enter Tag" value={tag || ""} onChange={setTag} />
-      <Form.Separator />
+      <Form.TextField
+        id="user"
+        title="User ID"
+        placeholder="Enter User ID"
+        value={formItem.user || ""}
+        onChange={(value) => setFormItem((prev) => ({ ...prev, user: value }))}
+      />
+      <Form.TextField
+        id="tag"
+        title="Tag"
+        placeholder="Enter Tag"
+        value={formItem.tag || ""}
+        onChange={(value) => setFormItem((prev) => ({ ...prev, tag: value }))}
+      />
     </Form>
   );
 }
