@@ -1,8 +1,7 @@
-import { Form, ActionPanel, Action, Clipboard, showToast, Toast } from "@raycast/api";
-
-import { LocalStorage } from "@raycast/api";
+import { Action, ActionPanel, Clipboard, Form, LocalStorage, showToast, Toast } from "@raycast/api";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import Style = Toast.Style;
 
 type Props = {
   accessToken: string;
@@ -27,7 +26,6 @@ const saveAccessToken = async (accessToken: string) => {
 
 const getAccessToken = async () => {
   const accessToken = await LocalStorage.getItem<string>("access-token");
-  // console.log(accessToken);
   return accessToken;
 };
 
@@ -40,7 +38,6 @@ export default function Command() {
   const [isLoading, setIsLoading] = useState(true);
 
   const searchArticle = async (props: Props) => {
-    // setShowAccessToken(props.accessToken);
     saveAccessToken(props.accessToken);
     const apiClient = axios.create({
       baseURL: "https://qiita.com/api/v2/items",
@@ -53,6 +50,10 @@ export default function Command() {
     const urls: string[] = [];
 
     try {
+      await showToast({
+        style: Style.Animated,
+        title: "Fetching Article...",
+      });
       const res = await apiClient.get(query);
       res.data.forEach((item: QiitaItemRes) => {
         if (item.url) {
@@ -60,12 +61,16 @@ export default function Command() {
         }
       });
     } catch (err) {
-      console.log(err);
+      await showToast({
+        style: Toast.Style.Failure,
+        title: `Fetching Error: ${err}`,
+      });
+      // console.log(err);
     } finally {
       const urlText = urls.join("\n\n");
       await Clipboard.copy(urlText);
       await showToast({
-        style: Toast.Style.Animated,
+        style: Toast.Style.Success,
         title: "Success Copied!",
       });
     }
@@ -102,11 +107,12 @@ export default function Command() {
       </Form>
     );
   }
+
   return (
     <Form
       actions={
         <ActionPanel>
-          <Action.SubmitForm onSubmit={searchArticle} />
+          <Action.SubmitForm title="Fetch Article" onSubmit={searchArticle} />
         </ActionPanel>
       }
       isLoading={isLoading}
