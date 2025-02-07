@@ -1,51 +1,36 @@
-import { Action, ActionPanel, Clipboard, Form, LocalStorage, showToast, Toast } from "@raycast/api";
+import { Action, ActionPanel, Clipboard, Form, showToast, Toast } from "@raycast/api";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Style = Toast.Style;
+import { FormItem, QiitaItemRes } from "./types";
+import { getAccessToken, getTag, getUserID, saveAccessToken, saveTag, saveUserID } from "./stores";
 
 type Props = {
   accessToken: string;
-  user: string;
+  userID: string;
   tag: string;
-};
-
-type QiitaItemRes = {
-  url: string;
-};
-
-//このプロパティ変更しただけだと再レンダリングされない(配列も同様)
-type FormItem = {
-  accessToken: string;
-  user: string;
-  tag: string;
-};
-
-const saveAccessToken = async (accessToken: string) => {
-  await LocalStorage.setItem("access-token", accessToken);
-};
-
-const getAccessToken = async () => {
-  const accessToken = await LocalStorage.getItem<string>("access-token");
-  return accessToken;
 };
 
 export default function Command() {
   const [formItem, setFormItem] = useState<FormItem>({
     accessToken: "",
-    user: "",
+    userID: "",
     tag: "",
   });
   const [isLoading, setIsLoading] = useState(true);
 
   const searchArticle = async (props: Props) => {
-    saveAccessToken(props.accessToken);
+    await saveAccessToken(props.accessToken);
+    await saveUserID(props.userID);
+    await saveTag(props.tag);
+
     const apiClient = axios.create({
       baseURL: "https://qiita.com/api/v2/items",
       headers: {
         Authorization: `Bearer ${formItem.accessToken}`,
       },
     });
-    const query = `?query=user:${props.user}+tag:${props.tag}`;
+    const query = `?query=user:${props.userID}+tag:${props.tag}`;
 
     const urls: string[] = [];
 
@@ -82,9 +67,14 @@ export default function Command() {
       try {
         setIsLoading(true);
         const act = await getAccessToken();
+        const userID = await getUserID();
+        const tag = await getTag();
+
         setFormItem((prev) => ({
           ...prev,
           accessToken: act || "",
+          userID: userID || "",
+          tag: tag || "",
         }));
       } catch (e) {
         console.log(e);
@@ -130,11 +120,11 @@ export default function Command() {
         }}
       />
       <Form.TextField
-        id="user"
+        id="userID"
         title="User ID"
-        placeholder="Enter User ID"
-        value={formItem.user || ""}
-        onChange={(value) => setFormItem((prev) => ({ ...prev, user: value }))}
+        placeholder="Enter User ID Without @"
+        value={formItem.userID || ""}
+        onChange={(value) => setFormItem((prev) => ({ ...prev, userID: value }))}
       />
       <Form.TextField
         id="tag"
