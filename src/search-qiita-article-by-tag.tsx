@@ -1,9 +1,11 @@
-import { Action, ActionPanel, Clipboard, Form, showToast, Toast } from "@raycast/api";
+import { Action, ActionPanel, Clipboard, Form, showToast, Toast, useNavigation } from "@raycast/api";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Style = Toast.Style;
-import { FormItem, QiitaItemRes } from "./types";
+import { FormItem, OGP, QiitaItemRes } from "./types";
 import { getAccessToken, getTag, getUserID, saveAccessToken, saveTag, saveUserID } from "./stores";
+import ogs from "open-graph-scraper";
+import { ResultView } from "./components/OGPImageList";
 
 type Props = {
   accessToken: string;
@@ -18,6 +20,19 @@ export default function Command() {
     tag: "",
   });
   const [isLoading, setIsLoading] = useState(true);
+  // const [ogpImages, setOgpImages] = useState<string[]>([]);
+  const { push } = useNavigation();
+
+  const getOgps = async (urls: string[]) => {
+    try {
+      const promises = urls.map((url) => ogs({ url }).then((res) => res.result.ogImage?.[0].url || ""));
+      const ogps = await Promise.all(promises);
+      return ogps;
+    } catch (error) {
+      console.error("Error fetching OGP images:", error);
+      return [];
+    }
+  };
 
   const searchArticle = async (props: Props) => {
     await saveAccessToken(props.accessToken);
@@ -32,6 +47,7 @@ export default function Command() {
     });
     const query = `?query=user:${props.userID}+tag:${props.tag}`;
 
+    const titles: string[] = [];
     const urls: string[] = [];
 
     try {
@@ -44,20 +60,23 @@ export default function Command() {
         if (item.url) {
           urls.push(item.url);
         }
+        if (item.title) {
+          titles.push(item.title);
+        }
       });
     } catch (err) {
       await showToast({
         style: Toast.Style.Failure,
         title: `Fetching Error: ${err}`,
       });
-      // console.log(err);
     } finally {
-      const urlText = urls.join("\n\n");
-      await Clipboard.copy(urlText);
+      const ogps = await getOgps(urls);
+      // await setOgpImages(ogps);
       await showToast({
         style: Toast.Style.Success,
         title: "Success Copied!",
       });
+      await push(<ResultView titles={titles} urls={urls} ogpImages={ogps} />);
     }
   };
 
@@ -84,10 +103,6 @@ export default function Command() {
     };
     fetch();
   }, []);
-
-  // useEffect(() => {
-  //   setIsLoading(false);
-  // }, [isLoading]);
 
   //localstorageからfetchした値が反映されないのでこれで対応
   if (isLoading) {
@@ -133,6 +148,7 @@ export default function Command() {
         value={formItem.tag || ""}
         onChange={(value) => setFormItem((prev) => ({ ...prev, tag: value }))}
       />
+      <Form.Separator />
     </Form>
   );
 }

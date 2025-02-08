@@ -1,4 +1,5 @@
 export type QiitaItemRes = {
+  title: string;
   url: string;
 };
 
@@ -7,4 +8,14 @@ export type FormItem = {
   accessToken: string;
   userID: string;
   tag: string;
+};
+
+export type OGP = {
+  ogTitle: string[];
+  ogImage?: OGImage[];
+};
+
+export type OGImage = {
+  url: string;
+  type: "png" | "jpg" | "jpeg" | "gif" | "webp";
 };
