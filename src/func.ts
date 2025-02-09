@@ -4,9 +4,8 @@ import { ArticleInfo } from "./types";
 export const setOgps = async (articles: ArticleInfo[]): Promise<ArticleInfo[]> => {
   try {
     const seted = await Promise.all(
-      articles.map(async (article, i) => {
+      articles.map(async (article) => {
         const res = await ogs({ url: article.url });
-        // return res.result.ogImage?.[0].url || "";
         const reArticle: ArticleInfo = {
           title: article.title,
           url: article.url,
