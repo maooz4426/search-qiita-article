@@ -17,5 +17,10 @@ export type OGP = {
 
 export type OGImage = {
   url: string;
-  type: "png" | "jpg" | "jpeg" | "gif" | "webp";
+};
+
+export type ArticleInfo = {
+  title: string;
+  url: string;
+  image: string;
 };

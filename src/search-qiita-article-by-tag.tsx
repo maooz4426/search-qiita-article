@@ -1,8 +1,8 @@
-import { Action, ActionPanel, Clipboard, Form, showToast, Toast, useNavigation } from "@raycast/api";
+import { Action, ActionPanel, Form, showToast, Toast, useNavigation } from "@raycast/api";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Style = Toast.Style;
-import { FormItem, OGP, QiitaItemRes } from "./types";
+import { ArticleInfo, FormItem, QiitaItemRes } from "./types";
 import { getAccessToken, getTag, getUserID, saveAccessToken, saveTag, saveUserID } from "./stores";
 import ogs from "open-graph-scraper";
 import { ResultView } from "./components/OGPImageList";
@@ -20,7 +20,6 @@ export default function Command() {
     tag: "",
   });
   const [isLoading, setIsLoading] = useState(true);
-  // const [ogpImages, setOgpImages] = useState<string[]>([]);
   const { push } = useNavigation();
 
   const getOgps = async (urls: string[]) => {
@@ -71,12 +70,18 @@ export default function Command() {
       });
     } finally {
       const ogps = await getOgps(urls);
-      // await setOgpImages(ogps);
       await showToast({
         style: Toast.Style.Success,
         title: "Success Copied!",
       });
-      await push(<ResultView titles={titles} urls={urls} ogpImages={ogps} />);
+
+      const articles: ArticleInfo[] = urls.map((url, index) => ({
+        title: titles[index],
+        url: url,
+        image: ogps[index],
+      }));
+
+      await push(<ResultView articles={articles} urls={urls} />);
     }
   };
 
@@ -96,7 +101,7 @@ export default function Command() {
           tag: tag || "",
         }));
       } catch (e) {
-        console.log(e);
+        console.error(e);
       } finally {
         setIsLoading(false);
       }
@@ -131,7 +136,6 @@ export default function Command() {
         value={formItem.accessToken || ""}
         onChange={(value) => {
           setFormItem((prev) => ({ ...prev, accessToken: value }));
-          console.log(formItem);
         }}
       />
       <Form.TextField

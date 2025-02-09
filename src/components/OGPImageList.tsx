@@ -1,27 +1,26 @@
 // ResultView.tsx
 import { ActionPanel, Action, List, Clipboard } from "@raycast/api";
+import { ArticleInfo } from "../types";
 
 type ResultViewProps = {
-  titles: string[];
+  articles: ArticleInfo[];
   urls: string[];
-  ogpImages: string[];
 };
 
 export const ResultView = (props: ResultViewProps) => {
-  console.log(props.ogpImages);
   return (
     <List isShowingDetail>
-      {props.ogpImages.map((image, i) => (
+      {props.articles.map((article, i) => (
         <List.Item
           key={i}
-          title={`${props.titles[i]}`}
+          title={`${article.title}`}
           actions={
             <ActionPanel>
               <Action title="All Copy" onAction={() => Clipboard.copy(props.urls.join("\n\n"))} />
-              <Action title={"Copy URL"} onAction={() => Clipboard.copy(image)} />
+              <Action title={"Copy URL"} onAction={() => Clipboard.copy(article.url)} />
             </ActionPanel>
           }
-          detail={<List.Item.Detail markdown={`![](${image})`} />}
+          detail={<List.Item.Detail markdown={`![](${article.image})`} />}
         />
       ))}
     </List>
