@@ -16,8 +16,9 @@ export const ResultView = (props: ResultViewProps) => {
           title={`${article.title}`}
           actions={
             <ActionPanel>
-              <Action title="All Copy" onAction={() => Clipboard.copy(props.urls.join("\n\n"))} />
-              <Action title={"Copy URL"} onAction={() => Clipboard.copy(article.url)} />
+              <Action title="All Articles Copy" onAction={() => Clipboard.copy(props.urls.join("\n\n"))} />
+              <Action title={"Copy Article URL"} onAction={() => Clipboard.copy(article.url)} />
+              <Action.OpenInBrowser url={article.url} />
             </ActionPanel>
           }
           detail={
