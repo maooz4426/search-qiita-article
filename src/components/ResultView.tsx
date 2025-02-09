@@ -1,5 +1,5 @@
 // ResultView.tsx
-import { ActionPanel, Action, List, Clipboard } from "@raycast/api";
+import { ActionPanel, Action, List } from "@raycast/api";
 import { ArticleInfo } from "../types";
 
 type ResultViewProps = {
