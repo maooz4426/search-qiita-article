@@ -103,7 +103,7 @@ export default function Command() {
     <Form
       actions={
         <ActionPanel>
-          <Action.SubmitForm title="Search Article" onSubmit={handleSubmit} />
+          <Action.SubmitForm title="Search Articles" onSubmit={handleSubmit} />
         </ActionPanel>
       }
       isLoading={isLoading}
