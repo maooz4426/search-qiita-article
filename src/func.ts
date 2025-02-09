@@ -7,10 +7,13 @@ export const setOgps = async (articles: ArticleInfo[]): Promise<ArticleInfo[]> =
       articles.map(async (article, i) => {
         const res = await ogs({ url: article.url });
         // return res.result.ogImage?.[0].url || "";
-        const reArticle = {
+        const reArticle: ArticleInfo = {
           title: article.title,
           url: article.url,
           image: res.result.ogImage?.[0].url || "",
+          likes_count: article.likes_count,
+          stocks_count: article.stocks_count,
+          tags: article.tags,
         };
         return reArticle;
       }),

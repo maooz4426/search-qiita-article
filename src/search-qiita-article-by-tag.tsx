@@ -37,7 +37,14 @@ export default function Command() {
 
         res.data.forEach((item: QiitaItemRes) => {
           if (item) {
-            articles.push({ title: item.title, url: item.url, image: "" });
+            articles.push({
+              title: item.title,
+              url: item.url,
+              image: "",
+              likes_count: item.likes_count,
+              stocks_count: item.stocks_count,
+              tags: item.tags,
+            });
           }
         });
 
@@ -96,7 +103,7 @@ export default function Command() {
     <Form
       actions={
         <ActionPanel>
-          <Action.SubmitForm title="Searc Article" onSubmit={handleSubmit} />
+          <Action.SubmitForm title="Search Article" onSubmit={handleSubmit} />
         </ActionPanel>
       }
       isLoading={isLoading}
