@@ -4,7 +4,7 @@ import { ArticleInfo, QiitaItemRes } from "./types";
 import { getAccessToken, getTag, getUserID, saveAccessToken, saveTag, saveUserID } from "./stores";
 import { ResultView } from "./components/ResultView";
 import { apiClient, setAccessToken } from "./apiClient";
-import { getOgps } from "./func";
+import { setOgps } from "./func";
 import { FormValidation, useForm } from "@raycast/utils";
 
 type SearchArticleValues = {
@@ -23,8 +23,8 @@ export default function Command() {
       await saveTag(values.tag);
 
       const query = `?query=user:${values.userID}+tag:${values.tag}`;
-      const titles: string[] = [];
       const urls: string[] = [];
+      const articles: ArticleInfo[] = [];
 
       try {
         await showToast({
@@ -36,28 +36,26 @@ export default function Command() {
         const res = await apiClient.get(query);
 
         res.data.forEach((item: QiitaItemRes) => {
-          if (item.url) {
-            urls.push(item.url);
-          }
-          if (item.title) {
-            titles.push(item.title);
+          if (item) {
+            articles.push({
+              title: item.title,
+              url: item.url,
+              image: "",
+              likes_count: item.likes_count,
+              stocks_count: item.stocks_count,
+              tags: item.tags,
+            });
           }
         });
 
-        const ogps = await getOgps(urls);
+        const setArticle = await setOgps(articles);
 
         await showToast({
           style: Toast.Style.Success,
           title: "Success Copied!",
         });
 
-        const articles: ArticleInfo[] = urls.map((url, index) => ({
-          title: titles[index],
-          url: url,
-          image: ogps[index],
-        }));
-
-        await push(<ResultView articles={articles} urls={urls} />);
+        await push(<ResultView articles={setArticle} urls={urls} />);
       } catch (err) {
         await showToast({
           style: Toast.Style.Failure,
@@ -105,7 +103,7 @@ export default function Command() {
     <Form
       actions={
         <ActionPanel>
-          <Action.SubmitForm title="Fetch Article" onSubmit={handleSubmit} />
+          <Action.SubmitForm title="Search Articles" onSubmit={handleSubmit} />
         </ActionPanel>
       }
       isLoading={isLoading}
