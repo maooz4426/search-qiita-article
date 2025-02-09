@@ -1,89 +1,75 @@
 import { Action, ActionPanel, Form, showToast, Toast, useNavigation } from "@raycast/api";
 import { useEffect, useState } from "react";
-import axios from "axios";
-import Style = Toast.Style;
-import { ArticleInfo, FormItem, QiitaItemRes } from "./types";
+import { ArticleInfo, QiitaItemRes } from "./types";
 import { getAccessToken, getTag, getUserID, saveAccessToken, saveTag, saveUserID } from "./stores";
-import ogs from "open-graph-scraper";
 import { ResultView } from "./components/ResultView";
+import { apiClient, setAccessToken } from "./apiClient";
+import { getOgps } from "./func";
+import { FormValidation, useForm } from "@raycast/utils";
 
-type Props = {
+type SearchArticleValues = {
   accessToken: string;
   userID: string;
   tag: string;
 };
 
 export default function Command() {
-  const [formItem, setFormItem] = useState<FormItem>({
-    accessToken: "",
-    userID: "",
-    tag: "",
-  });
   const [isLoading, setIsLoading] = useState(true);
   const { push } = useNavigation();
+  const { handleSubmit, itemProps, setValue } = useForm<SearchArticleValues>({
+    async onSubmit(values) {
+      await saveAccessToken(values.accessToken);
+      await saveUserID(values.userID);
+      await saveTag(values.tag);
 
-  const getOgps = async (urls: string[]) => {
-    try {
-      const promises = urls.map((url) => ogs({ url }).then((res) => res.result.ogImage?.[0].url || ""));
-      const ogps = await Promise.all(promises);
-      return ogps;
-    } catch (error) {
-      console.error("Error fetching OGP images:", error);
-      return [];
-    }
-  };
+      const query = `?query=user:${values.userID}+tag:${values.tag}`;
+      const titles: string[] = [];
+      const urls: string[] = [];
 
-  const searchArticle = async (props: Props) => {
-    await saveAccessToken(props.accessToken);
-    await saveUserID(props.userID);
-    await saveTag(props.tag);
+      try {
+        await showToast({
+          style: Toast.Style.Animated,
+          title: "Fetching Article...",
+        });
 
-    const apiClient = axios.create({
-      baseURL: "https://qiita.com/api/v2/items",
-      headers: {
-        Authorization: `Bearer ${formItem.accessToken}`,
-      },
-    });
-    const query = `?query=user:${props.userID}+tag:${props.tag}`;
+        setAccessToken(values.accessToken);
+        const res = await apiClient.get(query);
 
-    const titles: string[] = [];
-    const urls: string[] = [];
+        res.data.forEach((item: QiitaItemRes) => {
+          if (item.url) {
+            urls.push(item.url);
+          }
+          if (item.title) {
+            titles.push(item.title);
+          }
+        });
 
-    try {
-      await showToast({
-        style: Style.Animated,
-        title: "Fetching Article...",
-      });
-      const res = await apiClient.get(query);
-      res.data.forEach((item: QiitaItemRes) => {
-        if (item.url) {
-          urls.push(item.url);
-        }
-        if (item.title) {
-          titles.push(item.title);
-        }
-      });
-    } catch (err) {
-      await showToast({
-        style: Toast.Style.Failure,
-        title: `Fetching Error: ${err}`,
-      });
-    } finally {
-      const ogps = await getOgps(urls);
-      await showToast({
-        style: Toast.Style.Success,
-        title: "Success Copied!",
-      });
+        const ogps = await getOgps(urls);
 
-      const articles: ArticleInfo[] = urls.map((url, index) => ({
-        title: titles[index],
-        url: url,
-        image: ogps[index],
-      }));
+        await showToast({
+          style: Toast.Style.Success,
+          title: "Success Copied!",
+        });
 
-      await push(<ResultView articles={articles} urls={urls} />);
-    }
-  };
+        const articles: ArticleInfo[] = urls.map((url, index) => ({
+          title: titles[index],
+          url: url,
+          image: ogps[index],
+        }));
+
+        await push(<ResultView articles={articles} urls={urls} />);
+      } catch (err) {
+        await showToast({
+          style: Toast.Style.Failure,
+          title: `Fetching Error: ${err}`,
+        });
+      }
+    },
+    validation: {
+      accessToken: FormValidation.Required,
+      userID: FormValidation.Required,
+    },
+  });
 
   //非同期のタイミングでレンダリングがうまくいってない
   useEffect(() => {
@@ -94,12 +80,9 @@ export default function Command() {
         const userID = await getUserID();
         const tag = await getTag();
 
-        setFormItem((prev) => ({
-          ...prev,
-          accessToken: act || "",
-          userID: userID || "",
-          tag: tag || "",
-        }));
+        setValue("accessToken", act || "");
+        setValue("userID", userID || "");
+        setValue("tag", tag || "");
       } catch (e) {
         console.error(e);
       } finally {
@@ -122,36 +105,16 @@ export default function Command() {
     <Form
       actions={
         <ActionPanel>
-          <Action.SubmitForm title="Fetch Article" onSubmit={searchArticle} />
+          <Action.SubmitForm title="Fetch Article" onSubmit={handleSubmit} />
         </ActionPanel>
       }
       isLoading={isLoading}
     >
       {isLoading && <Form.Description text="Loading..." />}
       <Form.Description text="This form showcases all available form elements." />
-      <Form.TextField
-        id="accessToken"
-        title="Access Token"
-        placeholder="Enter Access Token"
-        value={formItem.accessToken || ""}
-        onChange={(value) => {
-          setFormItem((prev) => ({ ...prev, accessToken: value }));
-        }}
-      />
-      <Form.TextField
-        id="userID"
-        title="User ID"
-        placeholder="Enter User ID Without @"
-        value={formItem.userID || ""}
-        onChange={(value) => setFormItem((prev) => ({ ...prev, userID: value }))}
-      />
-      <Form.TextField
-        id="tag"
-        title="Tag"
-        placeholder="Enter Tag"
-        value={formItem.tag || ""}
-        onChange={(value) => setFormItem((prev) => ({ ...prev, tag: value }))}
-      />
+      <Form.TextField title="Access Token" placeholder="Enter Access Token" {...itemProps.accessToken} />
+      <Form.TextField title="User ID" placeholder="Enter User ID Without @" {...itemProps.userID} />
+      <Form.TextField title="Tag" placeholder="Enter Tag" {...itemProps.tag} />
       <Form.Separator />
     </Form>
   );
