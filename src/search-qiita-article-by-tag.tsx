@@ -5,7 +5,7 @@ import Style = Toast.Style;
 import { ArticleInfo, FormItem, QiitaItemRes } from "./types";
 import { getAccessToken, getTag, getUserID, saveAccessToken, saveTag, saveUserID } from "./stores";
 import ogs from "open-graph-scraper";
-import { ResultView } from "./components/OGPImageList";
+import { ResultView } from "./components/ResultView";
 
 type Props = {
   accessToken: string;
