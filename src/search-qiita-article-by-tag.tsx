@@ -1,13 +1,13 @@
 import { Action, ActionPanel, Form, showToast, Toast, useNavigation } from "@raycast/api";
 import { useEffect, useState } from "react";
-import axios from "axios";
 import Style = Toast.Style;
 import { ArticleInfo, FormItem, QiitaItemRes } from "./types";
 import { getAccessToken, getTag, getUserID, saveAccessToken, saveTag, saveUserID } from "./stores";
-import ogs from "open-graph-scraper";
 import { ResultView } from "./components/ResultView";
+import { apiClient, setAccessToken } from "./apiClient";
+import { getOgps } from "./func";
 
-type Props = {
+type searchArticleProps = {
   accessToken: string;
   userID: string;
   tag: string;
@@ -22,28 +22,11 @@ export default function Command() {
   const [isLoading, setIsLoading] = useState(true);
   const { push } = useNavigation();
 
-  const getOgps = async (urls: string[]) => {
-    try {
-      const promises = urls.map((url) => ogs({ url }).then((res) => res.result.ogImage?.[0].url || ""));
-      const ogps = await Promise.all(promises);
-      return ogps;
-    } catch (error) {
-      console.error("Error fetching OGP images:", error);
-      return [];
-    }
-  };
-
-  const searchArticle = async (props: Props) => {
+  const searchArticle = async (props: searchArticleProps) => {
     await saveAccessToken(props.accessToken);
     await saveUserID(props.userID);
     await saveTag(props.tag);
 
-    const apiClient = axios.create({
-      baseURL: "https://qiita.com/api/v2/items",
-      headers: {
-        Authorization: `Bearer ${formItem.accessToken}`,
-      },
-    });
     const query = `?query=user:${props.userID}+tag:${props.tag}`;
 
     const titles: string[] = [];
@@ -54,7 +37,9 @@ export default function Command() {
         style: Style.Animated,
         title: "Fetching Article...",
       });
+      setAccessToken(props.accessToken);
       const res = await apiClient.get(query);
+
       res.data.forEach((item: QiitaItemRes) => {
         if (item.url) {
           urls.push(item.url);
