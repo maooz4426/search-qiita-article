@@ -1,6 +1,6 @@
 # Search Qiita Article
 
-特定ユーザーの記事をタグで検索することできるRaycast拡張機能です。
+特定ユーザーのQiita記事をタグで検索することできるRaycast拡張機能です。
 
 # 使用方法
 ## 検索画面
