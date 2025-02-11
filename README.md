@@ -12,7 +12,7 @@
 |---|---|---
 |AccessToken|Qiitaで発行できるアクセストークン|xxxxxxxxx
 |UserID|@を抜いたUserID|maooz4426
-|Tag|検索したいタグ｜Go ライブラリ
+|Tag|検索したいタグ|Go ライブラリ
 
 
 
