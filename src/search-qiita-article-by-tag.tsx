@@ -45,6 +45,7 @@ export default function Command() {
               stocks_count: item.stocks_count,
               tags: item.tags,
             });
+            urls.push(item.url);
           }
         });
 
